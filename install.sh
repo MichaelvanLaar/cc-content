@@ -70,7 +70,7 @@ if $INSTALL_ALL; then
   while IFS= read -r -d '' dir; do
     skill_name="$(basename "$dir")"
     SKILL_NAMES+=("$skill_name")
-  done < <(find "$SOURCE_SKILLS_DIR" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
+  done < <(find "$SOURCE_SKILLS_DIR" -mindepth 1 -maxdepth 1 -type d -not -name '_*' -print0 | sort -z)
 fi
 
 if [[ ${#SKILL_NAMES[@]} -eq 0 ]]; then

@@ -8,10 +8,7 @@ allowed-tools: Read, Write, Bash
 argument-hint: "[optional: path to campaign briefing file]"
 ---
 
-@.claude/context/brand-voice.md **Read when:** generating any written post content
-@.claude/context/buyer-personas.md **Read when:** targeting a specific audience segment
-@.claude/context/company-profile.md **Read when:** reflecting company positioning in the post
-@.claude/context/samples.md **Read when:** samples file is present and owner requests on-brand examples
+@.claude/skills/linkedin-post/format-guidelines.md **Read when:** starting this skill
 
 # LinkedIn Post Skill
 
@@ -19,33 +16,31 @@ You are helping the owner produce a complete, publishable LinkedIn post. The pos
 must comply with the format guidelines in this skill folder, reflect the company's
 brand voice, and — if a campaign briefing is present — serve the briefing's goals.
 
-## Step 1: Check required context files
+## Step 1: Assess loaded context
 
-Before generating anything, verify that the three required context files exist.
+Review your current context window and assess whether it covers these categories.
+Match on meaning, not filename — a file called `Schreibstil.md` satisfies "writing
+style" just as well as `brand-voice.md`.
 
-Run:
+| Category                  | What it covers                                               | Required?   |
+| ------------------------- | ------------------------------------------------------------ | ----------- |
+| **Writing style**         | Tone, vocabulary, phrases to use or avoid, sentence patterns | Required    |
+| **Organization identity** | What the brand does, products, services, positioning         | Required    |
+| **Target audience**       | Who the reader is, their goals, challenges, and motivations  | Recommended |
 
-```bash
-ls .claude/context/brand-voice.md .claude/context/buyer-personas.md .claude/context/company-profile.md 2>/dev/null
-```
+For each **Required** category not covered by any loaded context, ask once:
 
-For each file that is **absent**, report:
+> "I don't see any **[category name]** information in the loaded context. Is this
+> intentional, or should I pause while you add it to your CLAUDE.md?"
 
-> "⚠ Required context file missing: `.claude/context/<filename>`
-> This file provides [purpose]. Without it, the generated post will lack [impact].
-> To create it, run the onboarding skill (`/onboarding`)."
+- If the owner says it's **intentional**: note the gap and continue. Label the final
+  output `⚠ DEGRADED OUTPUT` and list the missing categories.
+- If the owner says to **pause**: say "Add the file to your CLAUDE.md and invoke this
+  skill again." and stop.
 
-After reporting all missing files, ask:
+For **Recommended** categories that are absent: note it silently and continue.
 
-> "Shall I proceed and generate a degraded draft (labelled ⚠ DEGRADED OUTPUT), or
-> would you prefer to run the onboarding skill first?"
-
-- If the owner chooses to **proceed**: label the final output `⚠ DEGRADED OUTPUT —
-one or more required context files were missing during generation.`
-- If the owner chooses to **onboard first**: say "Please run the onboarding skill,
-  then invoke this skill again." and stop.
-
-If **all three files exist**, proceed silently to Step 2.
+If all Required categories are covered, proceed silently to Step 2.
 
 ## Step 2: Check for campaign briefing
 
@@ -64,23 +59,7 @@ ls brief.md 2>/dev/null && echo "found" || echo "missing"
 - **Missing**: note "No campaign briefing found — generating from company context
   only." and continue.
 
-## Step 3: Load context files
-
-Read each file that exists:
-
-- `.claude/context/brand-voice.md`
-- `.claude/context/buyer-personas.md`
-- `.claude/context/company-profile.md`
-- `.claude/context/samples.md` (read only if the file exists and the owner has
-  not explicitly opted out of using samples as reference)
-
-Also read the format guidelines for this skill:
-
-```bash
-cat .claude/skills/linkedin-post/format-guidelines.md
-```
-
-## Step 4: Ask for the post topic (if not already provided)
+## Step 3: Ask for the post topic (if not already provided)
 
 If the owner has not specified a topic or goal for the post, ask:
 
@@ -89,7 +68,7 @@ If the owner has not specified a topic or goal for the post, ask:
 
 Wait for the answer, then proceed.
 
-## Step 5: Generate the post
+## Step 4: Generate the post
 
 Produce a complete LinkedIn post that:
 
@@ -98,8 +77,8 @@ Produce a complete LinkedIn post that:
 - Ends with a specific, singular CTA
 - Includes 3–5 hashtags after the CTA (CamelCase, separated from body by a blank line)
 - Stays within the recommended character target (1,200–1,800 characters)
-- Reflects tone and vocabulary from `brand-voice.md`
-- Addresses the audience segment(s) from `buyer-personas.md`
+- Reflects tone and vocabulary from any loaded writing-style context
+- Addresses the audience from any loaded target-audience context
 - Does NOT embed a link in the post body (reference "first comment" if a link is needed)
 
 Internally verify against the quality checklist in `format-guidelines.md` before
@@ -118,13 +97,13 @@ LinkedIn post draft
 Character count: <N> / 3,000
 ```
 
-If the output is degraded (missing context files), prepend:
+If the output is degraded (missing required context categories), prepend:
 
 ```
-⚠ DEGRADED OUTPUT — generated without: <list of missing files>
+⚠ DEGRADED OUTPUT — generated without: <list of missing categories>
 ```
 
-## Step 6: Feedback
+## Step 5: Feedback
 
 After presenting the post, ask:
 

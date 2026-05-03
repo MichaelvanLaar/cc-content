@@ -7,50 +7,115 @@ description: >
   "create company profile", "populate .claude/context", "initialize marketing project",
   or "set up brand context". Also use when context files are missing and the user
   wants to create them through an interview.
-allowed-tools: Read, Write, Edit, Bash, Glob
-argument-hint: "[optional: name of context file to regenerate, e.g. buyer-personas.md]"
+allowed-tools: Read, Write, Edit, Bash
+argument-hint: "[optional: context category to regenerate, e.g. writing-style]"
 ---
-
-@.claude/context/company-profile.md **Read when:** regenerating or verifying this file
-@.claude/context/buyer-personas.md **Read when:** regenerating or verifying this file
-@.claude/context/brand-voice.md **Read when:** regenerating or verifying this file
-@.claude/context/storytelling-frameworks.md **Read when:** regenerating or verifying this file
 
 # Onboarding Skill
 
 You are setting up the company-level context for a marketing project. Your goal is to
-populate `.claude/context/` with structured Markdown files that all future skills will
-read — without overwriting anything already present from external tools.
+populate `.claude/context/` with structured Markdown files that skills will load via
+the project's CLAUDE.md hierarchy — and to wire all those files into CLAUDE.md with
+the appropriate @-imports.
 
-## Step 1: Pre-flight check
+## Step 1: Discover existing context
 
-Before asking a single question, audit what context files already exist.
+Before asking any questions, discover what context files already exist and classify
+them by category.
 
 Run:
 
 ```bash
-ls .claude/context/ 2>/dev/null || echo "(empty)"
+grep -s '^@' CLAUDE.md 2>/dev/null || echo "(no CLAUDE.md or no @-imports)"
+find .claude/context/ -type f -name "*.md" 2>/dev/null | sort || echo "(no .claude/context/)"
 ```
 
-For each of the four standard context files, note its status:
+Read each discovered file. Classify it into one of these categories based on its
+**content** (not its filename):
 
-| File                         | Status            |
-| ---------------------------- | ----------------- |
-| `company-profile.md`         | present / missing |
-| `buyer-personas.md`          | present / missing |
-| `brand-voice.md`             | present / missing |
-| `storytelling-frameworks.md` | present / missing |
+| Category                    | What it covers                                              |
+| --------------------------- | ----------------------------------------------------------- |
+| **writing-style**           | Tone, vocabulary, phrases to use/avoid, sentence patterns   |
+| **organization-identity**   | What the company does, products, mission, positioning       |
+| **target-audience**         | Personas, goals, challenges, preferred channels             |
+| **storytelling-frameworks** | Named frameworks: PAS, StoryBrand, Cialdini, etc.           |
+| **reference-materials**     | Books, research, or external sources informing the approach |
+| **reference-samples**       | Curated past content examples with quality annotations      |
 
-Show the owner the table. For each file marked **present**, say:
+Present the coverage table to the owner:
 
-> "`<filename>`: already present — will skip unless you ask me to regenerate it."
+```
+Context coverage
+─────────────────────────────────────────────
+Category                Status    File(s)
+─────────────────────────────────────────────
+writing-style           ✓ present  <path>
+organization-identity   ✗ missing  —
+target-audience         ✗ missing  —
+storytelling-frameworks ✗ missing  —
+reference-materials     ✗ missing  —
+reference-samples       ✗ missing  —
+─────────────────────────────────────────────
+```
 
-If `$ARGUMENTS` names a specific file to regenerate (e.g., `buyer-personas.md`), treat
-that file as **missing** regardless of whether it exists (regeneration mode).
+Omit categories that are both missing and clearly not applicable to the project type.
+If `$ARGUMENTS` names a specific category to regenerate, treat that category as
+missing regardless of whether a file already exists for it.
 
-## Step 2: Company profile interview
+## Step 2: Handle required categories
 
-If `company-profile.md` is **missing**, ask these questions — one at a time, wait for each answer:
+For each of these categories that is **missing**: `writing-style`, `organization-identity`
+
+Ask:
+
+> "The **[category]** category is missing. Would you like to:
+> (a) Create it now through a short interview
+> (b) You already have a file for this — tell me the path
+> (c) Skip for now"
+
+**Option (a) — Create via interview:**
+
+First ask: "Where should I save this file? (Suggested: `.claude/context/<name>.md` —
+or enter any path like `brand/voice.md` and I'll create it at `.claude/context/brand/voice.md`)"
+
+Then conduct the interview. Ask questions one at a time and wait for each answer.
+If the owner skips a question, use `TODO: [question text]` as a placeholder.
+
+**writing-style interview:**
+
+1. "How would you describe the brand's tone? (e.g., authoritative, conversational, witty, warm)"
+2. "What words or phrases does the brand use frequently?"
+3. "What words or phrases should the brand never use?"
+4. "Is there a specific reading level or vocabulary level to target?"
+5. "Any punctuation, capitalization, or formatting rules? (e.g., no exclamation marks, em-dash preferred)"
+
+Write the file:
+
+```markdown
+# Writing Style
+
+## Tone
+
+<answer>
+
+## Signature phrases & vocabulary
+
+<answer>
+
+## Words & phrases to avoid
+
+<answer>
+
+## Reading level
+
+<answer>
+
+## Formatting rules
+
+<answer>
+```
+
+**organization-identity interview:**
 
 1. "What is the company's name and one-sentence description of what it does?"
 2. "What are the main products or services? (List them briefly.)"
@@ -58,18 +123,12 @@ If `company-profile.md` is **missing**, ask these questions — one at a time, w
 4. "What makes this company different from competitors? (Key differentiators.)"
 5. "Are there any values or principles the company is known for?"
 
-If the owner skips a question, use a `TODO: [question text]` placeholder for that field.
-
-After collecting answers, write `.claude/context/company-profile.md`:
+Write the file:
 
 ```markdown
-# Company Profile
+# Organization Identity
 
-## Name
-
-<answer>
-
-## Description
+## Name & Description
 
 <answer>
 
@@ -90,15 +149,40 @@ After collecting answers, write `.claude/context/company-profile.md`:
 <answer>
 ```
 
-Confirm: "✓ Created `company-profile.md`."
+After writing, confirm: "✓ Created `.claude/context/<path>`."
 
-## Step 3: Buyer personas interview
+**Option (b) — Existing file:**
 
-If `buyer-personas.md` is **missing**, ask:
+Ask for the path. Read the file and verify it covers the category.
 
-1. "How many distinct buyer personas does this company target? (1–4 recommended.)"
+- If it covers the category: note it as present and continue.
+- If it does not: say so and offer options (a), (b), (c) again.
 
-For each persona, ask:
+**Option (c) — Skip:**
+
+Note it as intentionally absent and continue.
+
+## Step 3: Handle recommended category
+
+For the `target-audience` category, if missing:
+
+Ask:
+
+> "The **target-audience** category is missing. This helps skills tailor content to
+> the right reader. Would you like to:
+> (a) Create it through a short interview
+> (b) You have a file for this — tell me the path
+> (c) Skip — skills will generate without specific audience context"
+
+**Option (a) — Create via interview:**
+
+Ask: "Where should I save this file? (Suggested: `.claude/context/target-audience.md`)"
+
+Then ask:
+
+1. "How many distinct audience segments does this company target? (1–4 recommended.)"
+
+For each segment, ask:
 
 - "What is this persona's role or title?"
 - "What are their primary goals or motivations?"
@@ -106,10 +190,10 @@ For each persona, ask:
 - "What objections do they typically raise?"
 - "What content formats or channels do they prefer?"
 
-Write `.claude/context/buyer-personas.md` with one section per persona:
+Write the file:
 
 ```markdown
-# Buyer Personas
+# Target Audience
 
 ## Persona: <role/title>
 
@@ -119,151 +203,111 @@ Write `.claude/context/buyer-personas.md` with one section per persona:
 **Preferred channels:** <answer>
 ```
 
-Confirm: "✓ Created `buyer-personas.md`."
+After writing, confirm: "✓ Created `.claude/context/<path>`."
 
-## Step 4: Brand voice
+Handle Options (b) and (c) the same as in Step 2.
 
-If `brand-voice.md` is **missing**:
+## Step 4: Handle optional categories
 
-> "I don't see a `brand-voice.md`. This is typically produced by the n8n brand voice
-> pipeline. Would you like me to create a basic version through a short interview, or
-> will you add it separately later?"
+Ask once, listing both at the same time to minimize questions:
 
-If the owner wants to create it, ask:
+> "Would you like to add any of these optional context files?
+>
+> - **storytelling-frameworks** — named frameworks you use (PAS, StoryBrand, Cialdini, etc.)
+> - **reference-materials** — books or research that inform your content approach
+>
+> For each: (a) create via quick interview, (b) point to an existing file, or (c) skip.
+> Or say 'none' to skip all."
 
-1. "How would you describe the brand's tone? (e.g., authoritative, conversational, witty)"
-2. "What words or phrases does the brand use frequently?"
-3. "What words or phrases should the brand never use?"
-4. "Is there a specific reading level or vocabulary level to target?"
+**storytelling-frameworks (if creating):**
 
-Write `.claude/context/brand-voice.md`:
+Ask: "Where should I save this file? (Suggested: `.claude/context/storytelling-frameworks.md`)"
 
-```markdown
-# Brand Voice
+Then: "Which frameworks or persuasion principles do you use? List them and I'll
+document their structure."
 
-## Tone
+Write the file using the owner's descriptions.
 
-<answer>
+**reference-materials (if creating):**
 
-## Signature phrases & vocabulary
+Ask: "Where should I save this file? (Suggested: `.claude/context/reference-materials.md`)"
 
-<answer>
+Then: "What books, research, or external sources inform your content approach? For
+each, give the title and a brief note on what it contributes."
 
-## Words & phrases to avoid
+Write the file using the owner's descriptions.
 
-<answer>
+Note: `reference-samples` is managed by the `samples-curation` skill. Do not create
+it here.
 
-## Reading level
+## Step 5: Wire files into CLAUDE.md
 
-<answer>
-```
+Collect all context files that were created or confirmed in Steps 2–4.
 
-Confirm: "✓ Created `brand-voice.md`."
-
-If the owner says they'll add it separately, note it in the summary as
-"`brand-voice.md`: deferred — will be added separately."
-
-## Step 5: Storytelling frameworks
-
-If `storytelling-frameworks.md` is **missing**, ask:
-
-> "Do you use any named storytelling or persuasion frameworks in your content?
-> (Examples: problem–agitate–solve, hero's journey, Cialdini's principles, StoryBrand.)
-> I can document these as a reference, or you can add them later."
-
-If the owner provides frameworks, document them. If they skip, create the file with:
-
-```markdown
-# Storytelling Frameworks
-
-TODO: Document the frameworks this company uses for marketing content.
-Examples: Problem–Agitate–Solve, StoryBrand, Cialdini's principles.
-```
-
-Confirm: "✓ Created `storytelling-frameworks.md`."
-
-## Step 6: Context README
-
-Check whether `.claude/context/README.md` already exists:
-
-```bash
-ls .claude/context/README.md 2>/dev/null && echo "exists" || echo "missing"
-```
-
-If **missing**, create it:
-
-```markdown
-# Context Files
-
-This folder contains company-level context that all Claude Code marketing skills read.
-
-## Files
-
-<list each file in .claude/context/ with a one-line description>
-
-## Three-Level Context Architecture
-
-| Level              | Location                                    | What goes here                                                                      |
-| ------------------ | ------------------------------------------- | ----------------------------------------------------------------------------------- |
-| **Company scope**  | `.claude/context/`                          | Brand voice, buyer personas, company profile — applies to all work for this company |
-| **Format scope**   | `.claude/skills/<skill-name>/`              | Structure rules and guidelines specific to one output type                          |
-| **Campaign scope** | Campaign subfolders (e.g., `campaigns/q3/`) | Campaign briefings and one-off constraints for a specific initiative                |
-
-When Claude Code starts a session in any subfolder, it reads CLAUDE.md files up the
-directory tree. Add a CLAUDE.md at each level with `@`-imports for the relevant files
-so context loads automatically without manual setup.
-```
-
-Populate the Files table by listing what is actually present in `.claude/context/`.
-
-Confirm: "✓ Created `.claude/context/README.md`."
-
-## Step 7: Root CLAUDE.md guidance
-
-Check whether a root-level `CLAUDE.md` exists:
+Check the current CLAUDE.md state:
 
 ```bash
 ls CLAUDE.md 2>/dev/null && echo "exists" || echo "missing"
+grep -s '^@' CLAUDE.md 2>/dev/null
 ```
 
-**If missing**, create a starter `CLAUDE.md` with `@`-imports for every context file
-just created. Use a `**Read when:**` trigger appropriate to each file:
+For each confirmed context file, determine whether an @-import already exists in
+CLAUDE.md. Use the file's content (category) to pick the right trigger phrase:
+
+| Category                | @-import trigger                                                  |
+| ----------------------- | ----------------------------------------------------------------- |
+| writing-style           | `**Read when:** producing any written content`                    |
+| organization-identity   | `**Read when:** working on any deliverable for this company`      |
+| target-audience         | `**Read when:** targeting content at a specific audience segment` |
+| storytelling-frameworks | `**Read when:** structuring persuasive content`                   |
+| reference-materials     | `**Read when:** drawing on reference sources for this project`    |
+
+**If CLAUDE.md is missing:**
+
+Create it with a header using the company name from `organization-identity` (or
+`[Company Name]` if that file is also absent):
 
 ```markdown
 # [Company Name]
-
-@.claude/context/company-profile.md **Read when:** working on any deliverable for this company
-@.claude/context/brand-voice.md **Read when:** producing any written content
-@.claude/context/buyer-personas.md **Read when:** targeting content at a specific audience segment
-@.claude/context/storytelling-frameworks.md **Read when:** structuring persuasive content
 ```
 
-Confirm: "✓ Created root `CLAUDE.md` with context imports."
+Then propose adding @-imports for all confirmed context files:
 
-**If CLAUDE.md already exists**, check whether it contains an `@`-import for each
-newly created context file. For any that are missing, propose the addition:
+> "I'll add these @-imports to your CLAUDE.md:
+>
+> ```
+> @<path> **Read when:** <trigger>
+> @<path> **Read when:** <trigger>
+> ```
+>
+> Shall I proceed? (yes / edit / skip)"
 
-> "Your `CLAUDE.md` doesn't have an `@`-import for `brand-voice.md`. Shall I add:
-> `@.claude/context/brand-voice.md **Read when:** producing any written content`?"
+- **Yes**: write the @-imports to CLAUDE.md. Confirm: "✓ CLAUDE.md updated."
+- **Edit**: let the owner adjust paths or trigger phrases, then apply.
+- **Skip**: note "CLAUDE.md not updated — add @-imports manually when ready."
 
-Only add entries after the owner confirms.
+**If CLAUDE.md exists:**
 
-## Step 8: Summary
+Show only the @-imports that are missing (already-present ones need no action). Ask
+for confirmation before adding.
 
-Print a final summary table:
+## Step 6: Summary
+
+Print a final summary:
 
 ```
 Onboarding complete
-───────────────────
-company-profile.md         ✓ created
-buyer-personas.md          ✓ created
-brand-voice.md             already present — skipped
-storytelling-frameworks.md ✓ created
-.claude/context/README.md  ✓ created
-root CLAUDE.md             ✓ created (or: ✓ updated / already present)
+──────────────────────────────────────────────────────
+writing-style           ✓ .claude/context/<path>
+organization-identity   ✗ skipped intentionally
+target-audience         ✓ .claude/context/<path>
+storytelling-frameworks ✗ skipped
+reference-materials     ✗ skipped
+CLAUDE.md               ✓ updated (or: ✓ created / ✗ skipped)
+──────────────────────────────────────────────────────
 ```
 
 Then say:
 
-> "Your marketing project context is ready. Skills like `linkedin-post` and
-> `session-wrap` will automatically load these files when invoked."
+> "Your marketing project context is ready. Skills like `linkedin-post` will
+> automatically load these files via your CLAUDE.md when invoked."
