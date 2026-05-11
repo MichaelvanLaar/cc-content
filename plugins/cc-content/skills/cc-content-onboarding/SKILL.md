@@ -33,15 +33,15 @@ find .claude/context/ -type f -name "*.md" 2>/dev/null | sort || echo "(no .clau
 Read each discovered file. Classify it into one of these categories based on its
 **content** (not its filename):
 
-| Category                    | What it covers                                              |
-| --------------------------- | ----------------------------------------------------------- |
-| **content-defaults**        | Default output language and other project-level defaults    |
-| **writing-style**           | Tone, vocabulary, phrases to use/avoid, sentence patterns   |
-| **organization-identity**   | What the company does, products, mission, positioning       |
-| **target-audience**         | Personas, goals, challenges, preferred channels             |
-| **storytelling-frameworks** | Named frameworks: PAS, StoryBrand, Cialdini, etc.           |
-| **reference-materials**     | Books, research, or external sources informing the approach |
-| **reference-samples**       | Curated past content examples with quality annotations      |
+| Category                    | What it covers                                                                                   |
+| --------------------------- | ------------------------------------------------------------------------------------------------ |
+| **content-defaults**        | Default output language and other project-level defaults                                         |
+| **writing-style**           | Tone, vocabulary, phrases to use/avoid, sentence patterns                                        |
+| **organization-identity**   | What the company does, products, mission, positioning                                            |
+| **target-audience**         | Personas, goals, challenges, preferred channels                                                  |
+| **storytelling-frameworks** | Project-specific framework preferences (preferred/avoided); the plugin provides the full library |
+| **reference-materials**     | Books, research, or external sources informing the approach                                      |
+| **reference-samples**       | Curated past content examples with quality annotations                                           |
 
 Present the coverage table to the owner:
 
@@ -257,7 +257,9 @@ Ask once, listing both at the same time to minimize questions:
 
 > "Would you like to add any of these optional context files?
 >
-> - **storytelling-frameworks** — named frameworks you use (PAS, StoryBrand, Cialdini, etc.)
+> - **storytelling-frameworks** — which frameworks to prioritize or avoid for this
+>   project (the plugin already includes a full library; this captures client-specific
+>   preferences, e.g. "always StoryBrand and PAS, never AIDA")
 > - **reference-materials** — books or research that inform your content approach
 >
 > For each: (a) create via quick interview, (b) point to an existing file, or (c) skip.
@@ -267,10 +269,37 @@ Ask once, listing both at the same time to minimize questions:
 
 Ask: "Where should I save this file? (Suggested: `.claude/context/storytelling-frameworks.md`)"
 
-Then: "Which frameworks or persuasion principles do you use? List them and I'll
-document their structure."
+Note to the owner:
 
-Write the file using the owner's descriptions.
+> "The plugin already includes a comprehensive framework library. This file records
+> client-specific preferences — which frameworks to lean on or avoid for this project."
+
+Then ask:
+
+1. "Which frameworks should be preferred for this project? (e.g. StoryBrand, PAS)"
+2. "Which frameworks should be avoided, and why? (e.g. 'AIDA — client finds it too salesy')"
+3. "Any other notes on narrative approach for this client?"
+
+Write the file:
+
+```markdown
+# Storytelling Framework Preferences
+
+The plugin's full framework library is available to all skills. This file
+records project-specific preferences that override or constrain that library.
+
+## Preferred frameworks
+
+<answer>
+
+## Frameworks to avoid
+
+<answer>
+
+## Notes
+
+<answer>
+```
 
 **reference-materials (if creating):**
 
