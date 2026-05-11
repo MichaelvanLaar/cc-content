@@ -14,9 +14,9 @@ argument-hint: "[optional: context category to regenerate, e.g. writing-style]"
 # Onboarding Skill
 
 You are setting up the company-level context for a marketing project. Your goal is to
-populate `.claude/context/` with structured Markdown files that skills will load via
-the project's CLAUDE.md hierarchy — and to wire all those files into CLAUDE.md with
-the appropriate @-imports.
+populate `.claude/context/` with structured Markdown files that skills load on demand —
+and to register all those files in a context table in CLAUDE.md so skills can discover
+and read only what they need.
 
 ## Step 1: Discover existing context
 
@@ -26,7 +26,7 @@ them by category.
 Run:
 
 ```bash
-grep -s '^@' CLAUDE.md 2>/dev/null || echo "(no CLAUDE.md or no @-imports)"
+grep -A 100 '## Context files' CLAUDE.md 2>/dev/null || echo "(no CLAUDE.md or no context table)"
 find .claude/context/ -type f -name "*.md" 2>/dev/null | sort || echo "(no .claude/context/)"
 ```
 
@@ -313,57 +313,87 @@ Write the file using the owner's descriptions.
 Note: `reference-samples` is managed by the `cc-content:cc-content-samples-curation` skill. Do not create
 it here.
 
-## Step 6: Wire files into CLAUDE.md
+## Step 6: Register files in CLAUDE.md
 
-Collect all context files that were created or confirmed in Steps 2–4.
+Collect all context files that were created or confirmed in Steps 2–5.
 
 Check the current CLAUDE.md state:
 
 ```bash
 ls CLAUDE.md 2>/dev/null && echo "exists" || echo "missing"
-grep -s '^@' CLAUDE.md 2>/dev/null
+grep -A 100 '## Context files' CLAUDE.md 2>/dev/null || echo "(no context table)"
 ```
 
-For each confirmed context file, determine whether an @-import already exists in
-CLAUDE.md. Use the file's content (category) to pick the right trigger phrase:
+For each confirmed context file, generate a one-sentence summary (10–20 words) drawn
+from its content. Use this guidance per category:
 
-| Category                | @-import trigger                                                  |
-| ----------------------- | ----------------------------------------------------------------- |
-| content-defaults        | `**Read when:** producing any content for this project`           |
-| writing-style           | `**Read when:** producing any written content`                    |
-| organization-identity   | `**Read when:** working on any deliverable for this company`      |
-| target-audience         | `**Read when:** targeting content at a specific audience segment` |
-| storytelling-frameworks | `**Read when:** structuring persuasive content`                   |
-| reference-materials     | `**Read when:** drawing on reference sources for this project`    |
+| Category                | Summary guidance                                              |
+| ----------------------- | ------------------------------------------------------------- |
+| content-defaults        | State the output language and any other defaults              |
+| writing-style           | Tone adjectives + 1–2 key rules (e.g. "no exclamation marks") |
+| organization-identity   | Company name + one-sentence descriptor                        |
+| target-audience         | Role/title + key challenge in one phrase                      |
+| storytelling-frameworks | Which frameworks are preferred and which to avoid             |
+| reference-materials     | Theme or title(s) of the materials                            |
+
+Build the table rows — skip categories for which no file was confirmed:
+
+```
+| organization-identity | .claude/context/company/acme.md | B2B SaaS platform for enterprise HR teams |
+| writing-style | .claude/context/brand-voice.md | Formal German, no exclamation marks, em-dash preferred |
+```
 
 **If CLAUDE.md is missing:**
 
 Create it with a header using the company name from `organization-identity` (or
-`[Company Name]` if that file is also absent):
+`[Company Name]` if that file is also absent), then propose the context table:
 
-```markdown
-# [Company Name]
-```
-
-Then propose adding @-imports for all confirmed context files:
-
-> "I'll add these @-imports to your CLAUDE.md:
+> "I'll create CLAUDE.md with a context table for these files:
 >
-> ```
-> @<path> **Read when:** <trigger>
-> @<path> **Read when:** <trigger>
-> ```
+> | Category | File | Summary |
+> | -------- | ---- | ------- |
+> | <rows>   |
 >
 > Shall I proceed? (yes / edit / skip)"
 
-- **Yes**: write the @-imports to CLAUDE.md. Confirm: "✓ CLAUDE.md updated."
-- **Edit**: let the owner adjust paths or trigger phrases, then apply.
-- **Skip**: note "CLAUDE.md not updated — add @-imports manually when ready."
+- **Yes**: write CLAUDE.md with this structure and confirm: "✓ CLAUDE.md created."
+- **Edit**: let the owner adjust paths or summaries, then apply.
+- **Skip**: note "CLAUDE.md not created — register files manually when ready."
 
-**If CLAUDE.md exists:**
+The file to create:
 
-Show only the @-imports that are missing (already-present ones need no action). Ask
-for confirmation before adding.
+```markdown
+# [Company Name]
+
+## Context files
+
+Skills discover and load these files on demand — they are not pre-loaded.
+
+| Category | File | Summary |
+| -------- | ---- | ------- |
+| <rows>   |
+```
+
+**If CLAUDE.md exists but has no `## Context files` section:**
+
+Propose appending the section:
+
+> "I'll add a context table to your CLAUDE.md:
+>
+> | Category | File | Summary |
+> | -------- | ---- | ------- |
+> | <rows>   |
+>
+> Shall I proceed? (yes / edit / skip)"
+
+- **Yes**: append the section. Confirm: "✓ CLAUDE.md updated."
+- **Edit**: let the owner adjust, then apply.
+- **Skip**: note "CLAUDE.md not updated — add the context table manually when ready."
+
+**If CLAUDE.md exists and already has a `## Context files` section:**
+
+Show only the rows that are missing from the existing table. Ask for confirmation
+before adding them.
 
 ## Step 7: Summary
 
@@ -384,5 +414,5 @@ CLAUDE.md               ✓ updated (or: ✓ created / ✗ skipped)
 
 Then say:
 
-> "Your marketing project context is ready. Skills like `cc-content:cc-content-linkedin-post` will
-> automatically load these files via your CLAUDE.md when invoked."
+> "Your marketing project context is ready. Skills like `cc-content:cc-content-linkedin-post`
+> will read context files on demand using the table in your CLAUDE.md."

@@ -207,10 +207,15 @@ Required @-imports at the top of the body (after frontmatter):
 
 Required skill steps — write each as a level-2 heading with full prose instructions:
 
-**Step 1 — Assess loaded context**
-Standard semantic context check. Table with three rows: Writing style (Required),
-Organization identity (Required), Target audience (Recommended). Same ask-once / pause /
-DEGRADED OUTPUT pattern as all output-format skills.
+**Step 1 — Load context**
+Check for a `## Context files` table in CLAUDE.md via:
+`grep -A 100 '## Context files' CLAUDE.md 2>/dev/null || echo "(no context table)"`.
+For each row in the table, Read the file listed in the **File** column for categories:
+writing-style (Required), organization-identity (Required), target-audience (Recommended),
+content-defaults (Recommended). If the context table is absent or a Required category has
+no row, ask once: is this intentional or should the user run
+`/cc-content:cc-content-onboarding` first? Same pause / DEGRADED OUTPUT pattern as all
+output-format skills.
 
 **Step 2 — Check for campaign briefing**
 Check `$ARGUMENTS` first, then `ls brief.md`. If found, read and confirm. If missing,
@@ -296,5 +301,5 @@ Next steps:
 2. Review format-guidelines.md — especially any ⚠ KNOWLEDGE-BASED sections.
 3. Run /cc-content:cc-content-onboarding in a target project to set up context files, then test the skill.
 4. When output looks good, save strong examples with /cc-content:cc-content-samples-curation.
-5. Wire the new skill file into your project's CLAUDE.md with an appropriate @-import and trigger phrase.
+5. Run `/cc-content:cc-content-onboarding` in any project where you want to use this skill — it sets up the context files the skill will load on demand.
 ```

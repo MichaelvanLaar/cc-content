@@ -18,31 +18,38 @@ You are helping the owner produce a complete, publishable LinkedIn post. The pos
 must comply with the format guidelines in this skill folder, reflect the company's
 brand voice, and — if a campaign briefing is present — serve the briefing's goals.
 
-## Step 1: Assess loaded context
+## Step 1: Load context
 
-Review your current context window and assess whether it covers these categories.
-Match on meaning, not filename — a file called `Schreibstil.md` satisfies "writing
-style" just as well as `brand-voice.md`.
+Check whether CLAUDE.md contains a `## Context files` table:
+
+```bash
+grep -A 100 '## Context files' CLAUDE.md 2>/dev/null || echo "(no context table)"
+```
+
+For each of the following categories, find the matching row in the table (match on
+the **Category** column) and Read the file listed in the **File** column:
 
 | Category                  | What it covers                                               | Required?   |
 | ------------------------- | ------------------------------------------------------------ | ----------- |
-| **Writing style**         | Tone, vocabulary, phrases to use or avoid, sentence patterns | Required    |
-| **Organization identity** | What the brand does, products, services, positioning         | Required    |
-| **Target audience**       | Who the reader is, their goals, challenges, and motivations  | Recommended |
+| **writing-style**         | Tone, vocabulary, phrases to use or avoid, sentence patterns | Required    |
+| **organization-identity** | What the brand does, products, services, positioning         | Required    |
+| **target-audience**       | Who the reader is, their goals, challenges, and motivations  | Recommended |
+| **content-defaults**      | Default output language and other project-level settings     | Recommended |
 
-For each **Required** category not covered by any loaded context, ask once:
+If the context table is absent entirely, or if a **Required** category has no row in
+the table, ask once:
 
-> "I don't see any **[category name]** information in the loaded context. Is this
-> intentional, or should I pause while you add it to your CLAUDE.md?"
+> "I don't see any **[category name]** context. Is this intentional, or should I pause
+> while you run `/cc-content:cc-content-onboarding`?"
 
 - If the owner says it's **intentional**: note the gap and continue. Label the final
   output `⚠ DEGRADED OUTPUT` and list the missing categories.
-- If the owner says to **pause**: say "Add the file to your CLAUDE.md and invoke this
-  skill again." and stop.
+- If the owner says to **pause**: say "Run `/cc-content:cc-content-onboarding` to set
+  up your context files, then invoke this skill again." and stop.
 
 For **Recommended** categories that are absent: note it silently and continue.
 
-If all Required categories are covered, proceed silently to Step 2.
+After loading all available files, proceed to Step 2.
 
 ## Step 2: Check for campaign briefing
 
