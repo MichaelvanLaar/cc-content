@@ -5,7 +5,7 @@ description: >
   Invoke when the user says "create a new content skill", "build a skill for [format]",
   "new content skill", "synthesize research into a skill", or "create a [format] skill".
 allowed-tools: Read, Write, Bash
-argument-hint: "<format-name> (e.g., blog-article, marketing-email, whitepaper)"
+argument-hint: "<format-name> [--plugin] (e.g., blog-article, marketing-email --plugin)"
 ---
 
 # New Content Skill
@@ -15,10 +15,12 @@ skill. It reads research files from the staging folder, assesses coverage across
 axes, synthesizes a three-layer `format-guidelines.md`, and generates a `SKILL.md` skeleton
 ready for customization.
 
-## Step 1: Determine the format name
+## Step 1: Determine the format name and mode
 
 If the user passed a format name as `$ARGUMENTS`, use it. Normalize to kebab-case
 (e.g., "Blog Article" → `blog-article`, "Marketing Email" → `marketing-email`).
+Strip the `--plugin` flag from `$ARGUMENTS` before deriving the format name — it is not
+part of the name.
 
 If no argument was passed, ask:
 
@@ -26,6 +28,21 @@ If no argument was passed, ask:
 > `blog-article`, `marketing-email`, `whitepaper`, `video-script`, `case-study`."
 
 Wait for the answer before proceeding.
+
+**Determine the mode.** After resolving the format name, check whether `$ARGUMENTS`
+contains the flag `--plugin`.
+
+- If `--plugin` is present: you are in **plugin-dev mode**. The output will go into the
+  `cc-content` plugin repository at `plugins/cc-content/skills/<format-name>/`.
+- If `--plugin` is absent: ask once:
+
+  > "Where should this skill be created? Reply `project` for a project-local custom skill,
+  > or `plugin` to contribute it to the cc-content plugin."
+
+  Wait for the answer. `project` → **end-user mode**; `plugin` → **plugin-dev mode**.
+
+Store the mode — it controls output paths, shared-file handling, and @-imports in all
+subsequent steps.
 
 ## Step 2: Find research files
 
@@ -99,8 +116,10 @@ For each gap, ask once:
 
 ## Step 4: Synthesize format-guidelines.md
 
-Create the skill folder and copy shared reference files into the project if not already
-present:
+Create the skill folder and — in end-user mode only — copy shared reference files into
+the project if not already present.
+
+**End-user mode:**
 
 ```bash
 mkdir -p .claude/skills/<format-name>
@@ -109,9 +128,21 @@ cp -n "${CLAUDE_SKILL_DIR}/../_shared/storytelling-frameworks.md" ".claude/skill
 cp -n "${CLAUDE_SKILL_DIR}/../_shared/persuasion-principles.md" ".claude/skills/_shared/" 2>/dev/null
 ```
 
-Write `.claude/skills/<format-name>/format-guidelines.md`. Base every claim on the research
-files; use knowledge-based synthesis only for user-approved gaps, and mark those sections
-with `⚠ KNOWLEDGE-BASED — verify before treating this skill as production-ready`.
+**Plugin-dev mode:** do not copy shared files — they already exist in the repo at
+`plugins/cc-content/skills/_shared/`. Only create the new skill folder:
+
+```bash
+mkdir -p plugins/cc-content/skills/<format-name>
+```
+
+Write the `format-guidelines.md` to:
+
+- **End-user mode:** `.claude/skills/<format-name>/format-guidelines.md`
+- **Plugin-dev mode:** `plugins/cc-content/skills/<format-name>/format-guidelines.md`
+
+Base every claim on the research files; use knowledge-based synthesis only for
+user-approved gaps, and mark those sections with
+`⚠ KNOWLEDGE-BASED — verify before treating this skill as production-ready`.
 
 The file must follow this three-layer structure:
 
@@ -176,19 +207,30 @@ these universal items:
 
 ---
 
-Confirm when written: "✓ Written: `.claude/skills/<format-name>/format-guidelines.md`"
+Confirm when written:
+
+- **End-user mode:** "✓ Written: `.claude/skills/<format-name>/format-guidelines.md`"
+- **Plugin-dev mode:** "✓ Written: `plugins/cc-content/skills/<format-name>/format-guidelines.md`"
 
 ## Step 5: Generate SKILL.md skeleton
 
-Write `.claude/skills/<format-name>/SKILL.md`. The file must be a working content-production
-skill following the pattern established in the content-production authoring guide. Mark
-every section the user must customize with a `[TODO: ...]` tag.
+Write the `SKILL.md` to:
 
-Required YAML frontmatter:
+- **End-user mode:** `.claude/skills/<format-name>/SKILL.md`
+- **Plugin-dev mode:** `plugins/cc-content/skills/<format-name>/SKILL.md`
+
+The file must be a working content-production skill following the pattern established in
+the content-production authoring guide. Mark every section the user must customize with
+a `[TODO: ...]` tag.
+
+Required YAML frontmatter — the `name:` field differs by mode:
+
+- **End-user mode:** `name: <format-name>`
+- **Plugin-dev mode:** `name: cc-content-<format-name>` (e.g., `cc-content-blog-article`)
 
 ```yaml
 ---
-name: <format-name>
+name: <see above>
 description: >
   Use this skill when the owner wants to write, draft, or generate a [FORMAT].
   Invoke when the user says "[TODO: add trigger phrases for this format]".
@@ -197,12 +239,22 @@ argument-hint: "[optional: path to campaign briefing file]"
 ---
 ```
 
-Required @-imports at the top of the body (after frontmatter):
+Required @-imports at the top of the body (after frontmatter) — paths differ by mode:
+
+**End-user mode:**
 
 ```
 @.claude/skills/<format-name>/format-guidelines.md **Read when:** starting this skill
 @.claude/skills/_shared/storytelling-frameworks.md **Read when:** selecting a narrative framework
 @.claude/skills/_shared/persuasion-principles.md **Read when:** selecting persuasion principles
+```
+
+**Plugin-dev mode:**
+
+```
+@${CLAUDE_SKILL_DIR}/format-guidelines.md **Read when:** starting this skill
+@${CLAUDE_SKILL_DIR}/../_shared/storytelling-frameworks.md **Read when:** selecting a narrative framework
+@${CLAUDE_SKILL_DIR}/../_shared/persuasion-principles.md **Read when:** selecting persuasion principles
 ```
 
 Required skill steps — write each as a level-2 heading with full prose instructions:
@@ -268,11 +320,16 @@ delivery note (e.g., "Paste into your CMS", "Send for review").
 
 ---
 
-Confirm when written: "✓ Written: `.claude/skills/<format-name>/SKILL.md`"
+Confirm when written:
+
+- **End-user mode:** "✓ Written: `.claude/skills/<format-name>/SKILL.md`"
+- **Plugin-dev mode:** "✓ Written: `plugins/cc-content/skills/<format-name>/SKILL.md`"
 
 ## Step 6: Report and next steps
 
-Present a completion summary:
+Present a completion summary — the "Files written" section and next steps differ by mode.
+
+**End-user mode:**
 
 ```
 ✓ New skill created: <format-name>
@@ -286,7 +343,17 @@ Shared reference files (copied to project if not already present):
   .claude/skills/_shared/persuasion-principles.md
 ```
 
-If any areas were synthesized from general knowledge:
+**Plugin-dev mode:**
+
+```
+✓ New skill created: cc-content-<format-name>
+
+Files written:
+  plugins/cc-content/skills/<format-name>/format-guidelines.md
+  plugins/cc-content/skills/<format-name>/SKILL.md
+```
+
+If any areas were synthesized from general knowledge (either mode):
 
 ```
 ⚠ Sections synthesized from general knowledge (verify before shipping):
@@ -295,11 +362,23 @@ If any areas were synthesized from general knowledge:
 
 Then list suggested next steps:
 
+**End-user mode next steps:**
+
 ```
 Next steps:
 1. Open SKILL.md and replace all [TODO: ...] markers with format-specific content.
 2. Review format-guidelines.md — especially any ⚠ KNOWLEDGE-BASED sections.
-3. Run /cc-content:cc-content-onboarding in a target project to set up context files, then test the skill.
+3. Run /cc-content:cc-content-onboarding in this project (if you haven't already) to set up context files, then test the skill.
 4. When output looks good, save strong examples with /cc-content:cc-content-samples-curation.
-5. Run `/cc-content:cc-content-onboarding` in any project where you want to use this skill — it sets up the context files the skill will load on demand.
+```
+
+**Plugin-dev mode next steps:**
+
+```
+Next steps:
+1. Open SKILL.md and replace all [TODO: ...] markers with format-specific content.
+2. Review format-guidelines.md — especially any ⚠ KNOWLEDGE-BASED sections.
+3. Add the skill to marketplace.json if it's a new plugin entry.
+4. Test the skill in a target project: run /cc-content:cc-content-onboarding there, then invoke your new skill.
+5. When output looks good, save strong examples with /cc-content:cc-content-samples-curation.
 ```
