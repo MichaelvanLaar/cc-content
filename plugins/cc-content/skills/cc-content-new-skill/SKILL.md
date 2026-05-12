@@ -249,12 +249,12 @@ Required @-imports at the top of the body (after frontmatter) — paths differ b
 @.claude/skills/_shared/persuasion-principles.md **Read when:** selecting persuasion principles
 ```
 
-**Plugin-dev mode:**
+**Plugin-dev mode** (relative paths, same pattern as `cc-content-linkedin-post`):
 
 ```
-@${CLAUDE_SKILL_DIR}/format-guidelines.md **Read when:** starting this skill
-@${CLAUDE_SKILL_DIR}/../_shared/storytelling-frameworks.md **Read when:** selecting a narrative framework
-@${CLAUDE_SKILL_DIR}/../_shared/persuasion-principles.md **Read when:** selecting persuasion principles
+@./format-guidelines.md **Read when:** starting this skill
+@../_shared/storytelling-frameworks.md **Read when:** selecting a narrative framework
+@../_shared/persuasion-principles.md **Read when:** selecting persuasion principles
 ```
 
 Required skill steps — write each as a level-2 heading with full prose instructions:
