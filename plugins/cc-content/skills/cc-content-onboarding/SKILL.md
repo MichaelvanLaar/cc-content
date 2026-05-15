@@ -18,6 +18,13 @@ populate `context/` with structured Markdown files that skills load on demand �
 and to register all those files in a context table in CLAUDE.md so skills can discover
 and read only what they need.
 
+## Step 0: Recall learnings
+
+If `.claude/learnings.md` exists, read it silently. Apply relevant entries — in
+particular, prior path preferences, rejected interview answers, or project constraints
+that would change how questions are asked this run. Do not announce this step. If the
+file is absent, continue normally.
+
 ## Step 1: Discover existing context
 
 Before asking any questions, discover what context files already exist and classify
@@ -416,3 +423,44 @@ Then say:
 
 > "Your marketing project context is ready. Skills like `cc-content:cc-content-linkedin-post`
 > will read context files on demand using the table in your CLAUDE.md."
+
+## Step 8: Store learnings
+
+Before ending the session, review the interview for nuances that were discovered but
+not formalized into any context file created during Steps 2–5 of this run.
+
+For each qualifying observation, append one tagged line to `.claude/learnings.md`
+(create with standard header if missing):
+
+```text
+[cc-content:cc-content-onboarding] <concise observation> — <YYYY-MM-DD>
+```
+
+**Qualifies:** a preference, constraint, or project fact revealed during the interview
+that is not already captured in any context file written this run, in `CLAUDE.md`, or
+in any existing `.claude/learnings.md` entry under any plugin tag.
+
+**Does not qualify:** information written into a context file just now; facts already
+in `CLAUDE.md`; standard onboarding behavior applied without deviation; facts
+semantically equivalent to any existing entry in `.claude/learnings.md` — when in
+doubt, skip; redundancy is worse than a missed entry.
+
+Check for the file before appending:
+
+```bash
+ls .claude/learnings.md 2>/dev/null && echo "exists" || echo "missing"
+```
+
+Standard header when creating the file:
+
+```markdown
+# Learnings
+
+Corrections and feedback collected during content sessions.
+Entries are tagged by skill and dated.
+
+---
+```
+
+If any entries were written, confirm: "✓ N learning(s) saved to `.claude/learnings.md`."
+If nothing qualified, skip silently.
