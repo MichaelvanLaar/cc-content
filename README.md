@@ -6,6 +6,8 @@ A [Claude Code](https://claude.ai/code) plugin that provides a suite of content 
 
 ## Plugin: `cc-content`
 
+The content-production skills work for any industry, audience, and output language. They automatically use the context files set up during onboarding, and prompt you for any required information that the context does not already cover.
+
 | Skill                                     | What it does                                                                                                                                                                                      |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/cc-content:cc-content-onboarding`       | Interviews you about your brand, voice, and audience, then populates `context/` with structured context files that all other skills can read                                                      |

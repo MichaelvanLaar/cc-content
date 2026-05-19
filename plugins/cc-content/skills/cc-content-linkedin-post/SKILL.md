@@ -18,6 +18,10 @@ You are helping the owner produce a complete, publishable LinkedIn post. The pos
 must comply with the format guidelines in this skill folder, reflect the company's
 brand voice, and — if a campaign briefing is present — serve the briefing's goals.
 
+This skill is **language-, industry-, and audience-neutral**. It works for any
+output language and any B2B or B2C context. Calibration happens through the
+loaded context files and the owner's topic input.
+
 ## Step 0: Recall learnings
 
 If `.claude/learnings.md` exists, read it silently. Apply all entries relevant to
@@ -42,6 +46,22 @@ the **Category** column) and Read the file listed in the **File** column:
 | **organization-identity** | What the brand does, products, services, positioning         | Required    |
 | **target-audience**       | Who the reader is, their goals, challenges, and motivations  | Recommended |
 | **content-defaults**      | Default output language and other project-level settings     | Recommended |
+
+CLAUDE.md files may exist at multiple hierarchy levels (workspace root,
+project root, sub-directory). The harness already loads all applicable
+CLAUDE.md files into your context window — read the **most specific** context
+table that applies (sub-directory beats project root beats workspace).
+If multiple tables exist and disagree on a category's file, the most specific
+one wins.
+
+**Also look for brand-specific LinkedIn post rules.** Many projects extend the
+universal format-guidelines with their own LinkedIn rules — mandatory
+disclaimers, hashtag policies, link policies, CTA constraints, posting-frequency
+rules, or approval-workflow notes. These typically live in a file referenced
+from CLAUDE.md (for example under a `linkedin-rules` or `content-rules`
+category, or embedded inside `writing-style`). If you find any such file or
+section, read it and treat its rules as **additional mandatory gates** layered
+on top of `format-guidelines.md`.
 
 If the context table is absent entirely, or if a **Required** category has no row in
 the table, ask once:
