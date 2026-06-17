@@ -59,6 +59,30 @@ Other:
 Omit any empty categories. If all changes are in a single category, still use
 the labelled format so the owner sees what type of work was done.
 
+## Step 1b: Promote deliverables to context
+
+Look at the deliverables listed in Step 1 — files that are not in `context/`,
+`.claude/`, or skill folders.
+
+If any deliverables were created or significantly modified, ask:
+
+> "Are any of these worth registering as context for future work?
+> For example: a completed whitepaper, evergreen guide, or reference piece —
+> something skills should be able to build upon later.
+> (Name the files, or say 'none' to skip.)"
+
+- If the owner names files: for each one, run the promote flow inline:
+  1. Read the file.
+  2. Suggest a label (2–5 words) and a one-sentence summary drawn from the content.
+  3. Ask: "Register as `| [label] | [path] | [summary] |`? (yes / edit / skip)"
+  4. On yes: add the row to the appropriate `## Context files` table in CLAUDE.md.
+     If the section doesn't exist yet, create it first.
+  5. Confirm: "✓ Registered `[path]` as context."
+- If the owner says 'none' or skips: continue to Step 2.
+
+You can also invoke `/cc-content:cc-content-promote` at any point during a session
+to register a file immediately, without waiting for session wrap.
+
 ## Step 2: Identify skills used
 
 Ask:

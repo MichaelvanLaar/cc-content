@@ -36,52 +36,59 @@ this step. If the file is absent, continue normally.
 
 ## Step 1: Load context
 
-Check whether CLAUDE.md contains a `## Context files` table:
+Read the context table from all loaded CLAUDE.md files:
 
 ```bash
-grep -A 100 '## Context files' CLAUDE.md 2>/dev/null || echo "(no context table)"
+grep -A 200 '## Context files' CLAUDE.md 2>/dev/null || echo "(no context table)"
 ```
 
-For each of the following categories, find the matching row in the table
-(match on the **Category** column) and Read the file listed in the **File**
-column:
+CLAUDE.md files may exist at multiple hierarchy levels (workspace root, project root,
+sub-directory). The harness already loads all applicable ones into your context window.
+If multiple `## Context files` tables exist, rows from more specific CLAUDE.md files
+take precedence over less specific ones.
 
-| Category                  | What it covers                                               | Required?   |
-| ------------------------- | ------------------------------------------------------------ | ----------- |
-| **writing-style**         | Tone, vocabulary, phrases to use or avoid, sentence patterns | Required    |
-| **organization-identity** | What the brand does, products, services, positioning         | Required    |
-| **target-audience**       | Who the reader is, their goals, challenges, and motivations  | Recommended |
-| **content-defaults**      | Default output language and other project-level settings     | Recommended |
+**If no context table is found** in any loaded CLAUDE.md, ask once:
 
-CLAUDE.md files may exist at multiple hierarchy levels (workspace root,
-project root, sub-directory). The harness already loads all applicable
-CLAUDE.md files into your context window — read the **most specific** context
-table that applies (sub-directory beats project root beats workspace).
-If multiple tables exist and disagree on a category's file, the most specific
-one wins.
+> "I don't see any context files registered. Would you like to:
+> (a) Pause and run `/cc-content:cc-content-onboarding` to set up context
+> (b) Continue without project context (output will be generic)"
 
-**Also look for brand-specific blog rules.** Many projects extend the universal
-format-guidelines with their own blog-article rules — mandatory sections,
-author-bio blocks, SEO conventions, link policies, disclosure footers, image
-sourcing rules. These typically live in a file referenced from CLAUDE.md (for
-example under a `blog-rules` or `content-rules` category, or embedded inside
-`writing-style`). If you find any such file or section, read it and treat its
-rules as **additional mandatory gates** layered on top of `format-guidelines.md`.
+Stop if (a); note "generating without project context" and continue if (b).
 
-If the context table is absent entirely, or if a **Required** category has no
-row in the table, ask once:
+**If a context table exists**, read every file listed in the **File** column.
 
-> "I don't see any **[category name]** context. Is this intentional, or should
+After loading, assess what each file covers by reading its **Summary** entry.
+Map the loaded files to these content needs:
+
+| Need                    | What to look for in the Summary                                           |
+| ----------------------- | ------------------------------------------------------------------------- |
+| Brand voice             | Writing style, tone, vocabulary, phrasing rules, things to avoid          |
+| Organization background | Who the company/author is, products, positioning, mission                 |
+| Target audience         | Reader personas, goals, challenges, job titles                            |
+| Output language         | Default language, locale, or region                                       |
+| Blog-specific rules     | Mandatory sections, SEO conventions, author-bio, link policies, structure |
+
+**When multiple files plausibly cover the same need**, pick the one whose Summary
+best fits this specific task. For example: if one file's Summary says "casual, inclusive —
+job ads and employer branding" and another says "formal — corporate and thought leadership",
+and this article is a whitepaper, load the formal one and note the choice.
+
+**Coverage gaps — flag these two:**
+
+If no loaded file plausibly covers **brand voice**, ask once:
+
+> "I don't see any writing style or brand voice context. Is this intentional, or should
 > I pause while you run `/cc-content:cc-content-onboarding`?"
+>
+> - **Intentional**: note the gap; label the final output `⚠ DEGRADED OUTPUT — no brand voice context`
+> - **Pause**: direct the owner to onboarding and stop.
 
-- If the owner says it's **intentional**: note the gap and continue. Label the
-  final output `⚠ DEGRADED OUTPUT` and list the missing categories.
-- If the owner says to **pause**: say "Run `/cc-content:cc-content-onboarding`
-  to set up your context files, then invoke this skill again." and stop.
+Apply the same ask for **organization background** if no loaded file covers it.
 
-For **Recommended** categories that are absent: note silently and continue.
+For absent audience, language, or blog-specific rules: note silently and continue.
 
-After loading all available files, proceed to Step 2.
+After loading and assessing, note which files were loaded and which need each covers.
+Proceed to Step 2.
 
 ## Step 2: Check for campaign briefing
 
@@ -219,12 +226,10 @@ Produce a complete blog article that:
   at the cadence required by format-guidelines and any brand-specific rule
 - Suggests **internal-link targets** at the points where the funnel stage
   implies a next-step page
-- Reflects tone and vocabulary from the loaded `writing-style` context
-- Addresses the audience from the loaded `target-audience` context
-- Is written in the language specified by the loaded `content-defaults`
-  context (default: English if no setting exists)
-- Satisfies every mandatory rule from any brand-specific blog-rules document
-  loaded in Step 1
+- Reflects tone and vocabulary from loaded brand voice context
+- Addresses the audience from loaded audience context
+- Is written in the output language from loaded context (default: English if none specified)
+- Satisfies every mandatory rule from any blog-specific rules file loaded in Step 1
 
 Internally verify against the **quality checklist** in `format-guidelines.md`
 before presenting the output. If any gate fails and cannot be fixed before
@@ -253,11 +258,10 @@ Persuasion principles: <list>
 ─────────────────────────────────────────────
 ```
 
-If the output is degraded (missing required context categories or required
-inputs), prepend:
+If the output is degraded (brand voice or organization context missing), prepend:
 
 ```
-⚠ DEGRADED OUTPUT — generated without: <list of missing categories>
+⚠ DEGRADED OUTPUT — generated without: <list of missing context>
 ```
 
 ## Step 8: Feedback

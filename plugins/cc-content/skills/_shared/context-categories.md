@@ -1,161 +1,161 @@
-# Context Categories
+# Common Context Patterns
 
-Dev reference for skill authors in this repository. **Not deployed to target projects.
-Not @-imported by any skill.** Skills embed the relevant subset of this taxonomy
-directly in their runtime assessment steps.
+Dev reference for skill authors and the onboarding skill. **Not deployed to target projects.
+Not @-imported by any skill.**
+
+This is a guide to patterns commonly seen in content project context — not a formal taxonomy
+or required schema. Users register whatever context is relevant for their project, with
+free-form labels and file names of their choosing.
 
 ---
 
-## Categories
+## Common types of context
 
-### 1. `writing-style` — Required for content output
+### Brand voice / writing style
 
-What it covers: Tone, vocabulary, phrases to use or avoid, sentence patterns, reading
-level, formality, punctuation preferences.
+**What it typically covers:** Tone, vocabulary, phrases to use or avoid, sentence patterns,
+reading level, formality, punctuation preferences.
 
-Recognition signals: Tone descriptors ("authoritative", "conversational"), vocabulary
-lists, "words to avoid" sections, examples of preferred phrasing, style rules.
+**Why it matters:** Required for output that sounds on-brand. Without it, content skills
+produce generic prose.
 
-Common file names in target projects:
+**Signals in summaries:** Tone descriptors ("authoritative", "conversational"), vocabulary
+lists, "words to avoid", examples of preferred phrasing, style rules, language/locale.
+
+**Note:** Projects often have more than one writing style file — for example, one for
+recruiting content and another for corporate communications. Each gets a distinct label
+and summary so skills can pick the right one for each task.
+
+**Typical file names in target projects:**
 `brand-voice.md`, `writing-style.md`, `copy-guidelines.md`, `Schreibstil.md`,
-`tone-of-voice.md`, `editorial-guidelines.md`, any file describing how to write
+`tone-of-voice.md`, `editorial-guidelines.md`, `recruiting-voice.md`
 
 ---
 
-### 2. `organization-identity` — Required for content output
+### Organization or author profile
 
-What it covers: What the company does, products or services, mission, differentiators,
-values, and market positioning.
+**What it typically covers:** What the company/author does, products or services, mission,
+differentiators, values, market positioning.
 
-Recognition signals: Company name and description, product/service list, mission
-statement, "what makes us different", competitive positioning notes.
+**Why it matters:** Required for output that speaks accurately about the organization.
+Without it, content skills can only produce generic descriptions.
 
-Common file names in target projects:
+**Signals in summaries:** Company name, product/service list, mission statement,
+"what makes us different", competitive positioning.
+
+**Typical file names in target projects:**
 `company-profile.md`, `about-us.md`, `Unternehmensprofil.md`, `brand-platform.md`,
-`positioning.md`
+`positioning.md`, `author-bio.md`
 
 ---
 
-### 3. `target-audience` — Recommended for content output
+### Audience profiles
 
-What it covers: Who the content is for — their role, goals, challenges, objections,
-preferred channels, and what motivates them to act.
+**What it typically covers:** Who the content is for — role, goals, challenges, objections,
+preferred channels, motivations.
 
-Recognition signals: Persona names or roles, pain point descriptions, goals and
-motivations, objection handling notes, ICP (ideal customer profile) data.
+**Why it matters:** Helps skills calibrate language, examples, and CTAs to the right reader.
 
-Common file names in target projects:
+**Signals in summaries:** Persona names or roles, pain point descriptions, goals,
+ICP (ideal customer profile) data, channel preferences.
+
+**Typical file names in target projects:**
 `buyer-personas.md`, `target-audience.md`, `Zielgruppen.md`, `icp.md`,
-`customer-profiles.md`, `audience.md`
+`customer-profiles.md`, `reader-profile-1.md` … `reader-profile-7.md`
 
 ---
 
-### 4. `storytelling-frameworks` — Optional
+### Default output language
 
-What it covers: Named persuasion or narrative structures used in the company's
-content: Problem–Agitate–Solve, StoryBrand, Hero's Journey, Cialdini's principles.
+**What it typically covers:** The project's default language and locale for all content.
 
-Recognition signals: Framework names (PAS, StoryBrand, etc.), structural templates
-showing problem→agitate→solve, lists of persuasion or influence principles.
+**Why it matters:** Without it, content skills default to English. A simple one-liner
+prevents this silently wrong default.
 
-Common file names in target projects:
-`storytelling-frameworks.md`, `messaging-framework.md`, `narrative-structure.md`,
-`persuasion-principles.md`
+**Signals in summaries:** Language names, locale codes (de-DE, en-US, fr-FR).
 
-Skill authoring note: Two universal references live in `.claude/skills/_shared/`
-and should be @-imported by any output skill rather than inlined or duplicated:
-
-- `storytelling-frameworks.md` — catalog of 62 narrative structures with a
-  selection process. Use for content long enough to carry a narrative arc
-  (~600+ characters).
-- `persuasion-principles.md` — distilled operational guidance on Cialdini's
-  seven principles of influence (reciprocity, commitment & consistency, social
-  proof, liking, authority, scarcity, unity) plus pre-suasion. Use whenever the
-  output has persuasive intent — i.e., asks the reader to take an action.
-
-Frameworks shape _structure_; persuasion principles shape _psychological
-levers_. Strong content uses both — pick a framework for the spine, then layer
-1–3 principles into the copy.
+**Typical file names in target projects:**
+`content-defaults.md`, `output-defaults.md` — or embedded as a section within another
+context file (e.g. a line in `writing-style.md`)
 
 ---
 
-### 5. `reference-materials` — Optional
+### Storytelling frameworks and persuasion preferences
 
-What it covers: Books, research, or external references that inform the content
-approach — source material that shapes thinking, not operational frameworks.
+**What it typically covers:** Named narrative structures or persuasion principles that
+the project specifically prefers or wants to avoid.
 
-Recognition signals: Book titles, author names, key concepts or quotes from external
-sources, research findings, influences.
+**Note:** The plugin already includes a comprehensive framework library (`_shared/storytelling-frameworks.md`)
+and persuasion principles (`_shared/persuasion-principles.md`). A project-level file here
+captures client-specific overrides — e.g. "always StoryBrand and PAS, never AIDA".
 
-Common file names in target projects:
-`presuasion-book.md`, `reference-materials.md`, `Quellen.md`, `influences.md`,
-`<book-title>.md` (named after the source)
-
----
-
-### 6. `reference-samples` — Optional
-
-What it covers: Curated examples of high-quality past content. Managed by the
-`samples-curation` skill; stored at `context/samples.md` by convention.
-
-Recognition signals: Lists of past posts or copy with annotations like "what worked",
-quality ratings, or "use as reference" notes with a consistent per-entry structure.
-
-Common file names in target projects:
-`samples.md`, `examples.md`, `gold-standard.md`
+**Signals in summaries:** Framework names (PAS, StoryBrand, etc.), preference or avoidance
+statements, notes on narrative approach for this client.
 
 ---
 
-### 7. `campaign-brief` — Optional / session-scoped
+### Format rules for specific output types
 
-What it covers: Goals, key messages, constraints, and audience for a specific
-initiative. Applies to one campaign only — distinct from company-level context.
+**What it typically covers:** Mandatory structural elements, SEO conventions, author-bio
+blocks, link policies, approval workflows — specific to one content format.
 
-Recognition signals: Campaign name, launch date, key messages, target KPIs,
-content restrictions, CTA requirements.
+**Signals in summaries:** "Blog article rules", "whitepaper structure", "email newsletter
+format", "LinkedIn post policy".
 
-Common file names in target projects:
-`brief.md`, `campaign-brief.md`, `<campaign-name>-brief.md`
-
-Note: Skills detect this automatically via `$ARGUMENTS` or by checking for `brief.md`
-in the current working directory. Do not include it in the context assessment table
-shown to users — handle it in a dedicated "check for campaign briefing" step.
+**Typical file names in target projects:**
+`blog-rules.md`, `whitepaper-template.md`, `newsletter-format.md`,
+`linkedin-guidelines.md`
 
 ---
 
-### 8. `content-defaults` — Always created by onboarding
+### Reference materials
 
-What it covers: Project-level output defaults that apply to every deliverable — primarily
-the default output language, but potentially also date format, number format, or currency.
-Kept separate from `writing-style` so that it remains a writable Markdown file even when
-the writing styleguide is delivered as a non-editable PDF.
+**What it typically covers:** Books, research, or external sources that inform the content
+approach — source material that shapes thinking.
 
-Recognition signals: Key-value pairs such as "Output language: German (de-DE)", language
-codes, locale strings.
+**Signals in summaries:** Book titles, author names, key concepts or quotes from external
+sources, research findings.
 
-Common file names in target projects:
-`content-defaults.md`, `output-defaults.md`, `project-defaults.md`
+**Typical file names in target projects:**
+`presuasion-book.md`, `reference-materials.md`, `Quellen.md`, `<book-title>.md`
 
 ---
 
-## How to use this taxonomy when authoring a skill
+### Content samples
 
-1. Identify which categories the skill needs (Required, Recommended, Optional).
-2. Embed a context assessment table directly in the skill's first step — do not
-   @-import this file.
-3. Include this instruction in that step:
+**What it typically covers:** Curated examples of high-quality past content with annotations.
+Managed by the `cc-content:cc-content-samples-curation` skill; stored at `context/samples.md`
+by convention.
 
-   > "Review your current context window and assess whether it covers these categories.
-   > Match on meaning, not filename — a file called `Schreibstil.md` satisfies
-   > 'writing style' just as well as `brand-voice.md`."
+**Signals in summaries:** "Gold-standard examples", "curated samples", "reference posts".
 
-4. For Required categories missing from context:
-   - Ask once: "I don't see any **[category]** information in the loaded context. Is
-     this intentional, or should I pause while you add it to your CLAUDE.md?"
-   - If intentional: note it, continue, label final output `⚠ DEGRADED OUTPUT`
-   - If not intentional: pause and let owner add the file to their CLAUDE.md
+---
 
-5. For Recommended categories: note absence silently — do not ask.
-6. For Optional categories: use if present, ignore if absent.
-7. Never @-import project context files from within the skill — those are loaded
-   exclusively via the target project's CLAUDE.md hierarchy.
+### Campaign brief
+
+**What it typically covers:** Goals, key messages, constraints, and audience for a specific
+campaign. Session-scoped — distinct from company-level context.
+
+**Note:** Skills detect this automatically via `$ARGUMENTS` or by checking for `brief.md`
+in the current working directory. It does not need to appear in the `## Context files`
+table unless the owner wants it permanently registered.
+
+---
+
+## How to use this reference when authoring a skill
+
+1. Do not enumerate required categories by name. Instead, describe what the skill needs
+   in terms of **content needs** (brand voice, audience, organization background, etc.).
+
+2. In the skill's context-loading step, instruct Claude to:
+   - Read all files listed in the `## Context files` table
+   - Assess each file's **Summary** to understand what it covers
+   - Load the file(s) most relevant to the current task
+   - When multiple files cover the same need, pick the best match for the specific task
+
+3. Warn on semantic absence, not label absence:
+   - "No brand voice context found" (not: "no `writing-style` row")
+   - "No organization background found" (not: "no `organization-identity` row")
+
+4. For optional context (audience, language, format rules): use if present, note silently
+   if absent, never ask.

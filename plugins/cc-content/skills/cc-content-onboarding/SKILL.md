@@ -1,433 +1,271 @@
 ---
 name: cc-content-onboarding
 description: >
-  Use this skill when setting up a new marketing project with Claude Code, populating
-  company-level context files, or initializing the context/ folder.
+  Use this skill when setting up a new marketing project with Claude Code, registering
+  context files, or extending the context of an existing project.
   Invoke when the user asks to "onboard a new client", "set up context files",
-  "create company profile", "populate context", "initialize marketing project",
-  or "set up brand context". Also use when context files are missing and the user
-  wants to create them through an interview.
+  "initialize marketing project", "register context", "add context", or "set up project context".
+  Also use when context files are missing and the user wants to set up through a guided interview.
 allowed-tools: Read, Write, Edit, Bash
-argument-hint: "[optional: context category to regenerate, e.g. writing-style]"
+argument-hint: "[optional: path to an existing file to register as context]"
 ---
 
 # Onboarding Skill
 
-You are setting up the company-level context for a marketing project. Your goal is to
-populate `context/` with structured Markdown files that skills load on demand —
-and to register all those files in a context table in CLAUDE.md so skills can discover
-and read only what they need.
+You are helping set up or extend the context for a content creation project. Context files
+are Markdown documents registered in `CLAUDE.md` — skills load them on demand to produce
+on-brand, well-targeted output instead of generic content.
+
+Two paths through this skill:
+
+- **Power user** (existing files): register them quickly with a label and summary
+- **New user** (building from scratch): guided interview to create context files
+
+If `$ARGUMENTS` contains a file path, skip to Step 3 using that file as the starting point.
 
 ## Step 0: Recall learnings
 
-If `.claude/learnings.md` exists, read it silently. Apply relevant entries — in
-particular, prior path preferences, rejected interview answers, or project constraints
-that would change how questions are asked this run. Do not announce this step. If the
-file is absent, continue normally.
+If `.claude/learnings.md` exists, read it silently. Apply relevant entries — in particular,
+path preferences, rejected interview answers, or project constraints discovered in prior runs.
+Do not announce this step. If the file is absent, continue normally.
 
 ## Step 1: Discover existing context
 
-Before asking any questions, discover what context files already exist and classify
-them by category.
-
-Run:
+Check what is already registered:
 
 ```bash
-grep -A 100 '## Context files' CLAUDE.md 2>/dev/null || echo "(no CLAUDE.md or no context table)"
-find context/ -type f -name "*.md" 2>/dev/null | sort || echo "(no context/)"
+grep -A 200 '## Context files' CLAUDE.md 2>/dev/null || echo "(no context table)"
+find context/ -type f -name "*.md" 2>/dev/null | sort || echo "(no context/ folder)"
 ```
 
-Read each discovered file. Classify it into one of these categories based on its
-**content** (not its filename):
+If a context table exists, show it to the owner:
 
-| Category                    | What it covers                                                                                   |
-| --------------------------- | ------------------------------------------------------------------------------------------------ |
-| **content-defaults**        | Default output language and other project-level defaults                                         |
-| **writing-style**           | Tone, vocabulary, phrases to use/avoid, sentence patterns                                        |
-| **organization-identity**   | What the company does, products, mission, positioning                                            |
-| **target-audience**         | Personas, goals, challenges, preferred channels                                                  |
-| **storytelling-frameworks** | Project-specific framework preferences (preferred/avoided); the plugin provides the full library |
-| **reference-materials**     | Books, research, or external sources informing the approach                                      |
-| **reference-samples**       | Curated past content examples with quality annotations                                           |
+> "Your project already has these context files registered:
+>
+> | Label           | File | Summary |
+> | --------------- | ---- | ------- |
+> | <existing rows> |
+>
+> Would you like to add more context? (yes / no)"
 
-Present the coverage table to the owner:
+If no context table and no context/ folder, continue to Step 2 directly.
+If the context table is empty or only partially filled, continue to Step 2.
 
-```
-Context coverage
-─────────────────────────────────────────────
-Category                Status    File(s)
-─────────────────────────────────────────────
-writing-style           ✓ present  <path>
-organization-identity   ✗ missing  —
-target-audience         ✗ missing  —
-storytelling-frameworks ✗ missing  —
-reference-materials     ✗ missing  —
-reference-samples       ✗ missing  —
-─────────────────────────────────────────────
-```
+## Step 2: Surface common starting points
 
-Omit categories that are both missing and clearly not applicable to the project type.
-If `$ARGUMENTS` names a specific category to regenerate, treat that category as
-missing regardless of whether a file already exists for it.
+If context is sparse or absent, present the most common types of context that make a
+meaningful difference to output quality. These are suggestions, not required slots.
 
-## Step 2: Handle required categories
+> "Content skills produce much better output when they have project context to work from.
+> Here are the most common types — does any of this apply to your project?
+>
+> - **Brand voice / writing style** — tone, vocabulary, phrases to use or avoid
+> - **Organization or author profile** — who you are, what you do, your positioning
+> - **Audience profiles** — who you're writing for, their goals and challenges
+> - **Default output language** — a simple note like 'Output language: German (de-DE)'
+> - **Format rules for specific output types** — e.g. 'all whitepapers follow this structure'
+>
+> These are just the most common starting points. Register whatever context is relevant
+> for your project — there are no restrictions on types, file names, or locations.
+>
+> Do you already have files you want to register, or would you like to create context
+> files through a short interview? (You can also describe something not on this list.)"
 
-For each of these categories that is **missing**: `writing-style`, `organization-identity`
+Wait for the owner's response and route accordingly:
+
+- **Have existing files** → go to Step 3 for each file
+- **Want to create files** → go to Step 4
+- **Something not on the list** → treat as custom context; go to Step 3 or 4 as appropriate
+- **Nothing / skip** → go to Step 5
+
+## Step 3: Register an existing file
+
+For each file the owner wants to register:
+
+Read the file.
+
+Suggest a label based on the file content — brief, descriptive, and free-form. The label
+appears in the CLAUDE.md table and is what the owner will recognize at a glance.
+
+> "Suggested label: **[label]**
+> (or enter your own — no restrictions on naming)"
+
+Generate a one-sentence summary (10–25 words) from the file content. The summary is the key
+signal skills use to decide which file is relevant for a given task — be specific:
+
+- Too vague: "Writing style guidelines for the company"
+- Good: "Formal German, em-dash preferred, no exclamation marks — all corporate copy"
+- Good: "Casual and inclusive tone — job ads and employer branding only"
+
+Show the proposed table row:
+
+> "I'll register this in your CLAUDE.md context table as:
+>
+> | [label] | [file path] | [summary] |
+>
+> Confirm? (yes / edit / skip)"
+
+- **Yes**: record the row for Step 5
+- **Edit**: ask what to change, update, show again
+- **Skip**: discard this file
+
+After handling this file, ask: "Would you like to register another file, or create a new
+context file? (yes / create / done)" and loop back to Step 3, go to Step 4, or proceed to Step 5.
+
+## Step 4: Create a new context file
+
+When the owner wants to create a context file from scratch:
 
 Ask:
 
-> "The **[category]** category is missing. Would you like to:
-> (a) Create it now through a short interview
-> (b) You already have a file for this — tell me the path
-> (c) Skip for now"
+> "What should this context file cover? Describe it in a few words
+> (e.g. 'our brand voice', 'company background', 'reader personas')."
 
-**Option (a) — Create via interview:**
+Based on the answer, ask targeted questions one at a time. Adapt questions to what the owner
+described — the following are starting points, not a fixed script:
 
-First ask: "Where should I save this file? (Suggested: `context/<name>.md` —
-or enter any path like `brand/voice.md` and I'll create it at `context/brand/voice.md`)"
+**For brand voice / writing style:**
 
-Then conduct the interview. Ask questions one at a time and wait for each answer.
-If the owner skips a question, use `TODO: [question text]` as a placeholder.
-
-**writing-style interview:**
-
-1. "How would you describe the brand's tone? (e.g., authoritative, conversational, witty, warm)"
+1. "How would you describe the tone? (e.g. authoritative, conversational, warm, technical)"
 2. "What words or phrases does the brand use frequently?"
-3. "What words or phrases should the brand never use?"
-4. "Is there a specific reading level or vocabulary level to target?"
-5. "Any punctuation, capitalization, or formatting rules? (e.g., no exclamation marks, em-dash preferred)"
+3. "What words or phrases should never appear?"
+4. "Any formatting or punctuation rules? (e.g. no exclamation marks, em-dash preferred)"
+5. "Any reading level or vocabulary target?"
 
-Write the file:
+**For organization or author profile:**
 
-```markdown
-# Writing Style
+1. "What is the name and a one-sentence description of what you do?"
+2. "What are the main products or services?"
+3. "What makes you different from competitors?"
+4. "Any values, principles, or positioning worth noting?"
 
-## Tone
+**For audience profiles:**
 
-<answer>
+1. "How many distinct audience segments? (1–4 recommended)"
+   For each segment, ask: role or title; primary goals; biggest challenges; preferred channels.
 
-## Signature phrases & vocabulary
+**For default output language:**
 
-<answer>
+1. "What is the default output language for all content in this project?
+   (e.g. German / de-DE, English / en-US, French / fr-FR)"
 
-## Words & phrases to avoid
+**For format rules specific to a content type:**
 
-<answer>
+1. "Which content type do these rules apply to?"
+2. "What are the mandatory structural elements or rules?"
 
-## Reading level
+**For any other context type:**
+Ask open-ended questions appropriate to what the owner described. The goal is to capture the
+information that will make content skills produce better output for this specific project.
 
-<answer>
+After collecting answers, ask:
 
-## Formatting rules
+> "Where should I save this file? (Suggested: `context/<descriptive-name>.md` — but any
+> path works, e.g. `brand/voice.md` or pointing to an existing folder.)"
 
-<answer>
-```
+Write the file with a clear heading and the owner's answers organized under descriptive sections.
+Match the structure to the content type — do not force a generic template.
 
-**organization-identity interview:**
+After writing, confirm: "✓ Created `[path]`." Then proceed to Step 3 to register it.
 
-1. "What is the company's name and one-sentence description of what it does?"
-2. "What are the main products or services? (List them briefly.)"
-3. "What is the company's mission or core purpose?"
-4. "What makes this company different from competitors? (Key differentiators.)"
-5. "Are there any values or principles the company is known for?"
+## Step 5: Update CLAUDE.md
 
-Write the file:
+Collect all rows confirmed in Steps 3–4.
 
-```markdown
-# Organization Identity
-
-## Name & Description
-
-<answer>
-
-## Products & Services
-
-<answer>
-
-## Mission
-
-<answer>
-
-## Differentiators
-
-<answer>
-
-## Values
-
-<answer>
-```
-
-After writing, confirm: "✓ Created `context/<path>`."
-
-**Option (b) — Existing file:**
-
-Ask for the path. Read the file and verify it covers the category.
-
-- If it covers the category: note it as present and continue.
-- If it does not: say so and offer options (a), (b), (c) again.
-
-**Option (c) — Skip:**
-
-Note it as intentionally absent and continue.
-
-## Step 3: Set content defaults (unconditional)
-
-This step runs regardless of whether a `content-defaults` file already exists.
-
-Check whether a `content-defaults` file is present:
-
-```bash
-find context/ -type f -name "*.md" 2>/dev/null | xargs grep -l "Output language" 2>/dev/null | head -1
-```
-
-**If a file is found:** read it and show its current contents:
-
-> "I found an existing content-defaults file at `<path>`:
->
-> ```
-> <file contents>
-> ```
->
-> Would you like to update it? (yes / no)"
-
-- **No**: keep the existing file and proceed to Step 4.
-- **Yes**: proceed with the interview below and overwrite the file.
-
-**If no file is found:** proceed with the interview.
-
-Ask: "Where should I save the content defaults file?
-(Suggested: `context/content-defaults.md`)"
-
-Then ask:
-
-> "What is the default output language for all content created in this project?
-> (Examples: German / de-DE, English / en-US, French / fr-FR)"
-
-Write the file:
-
-```markdown
-# Content Defaults
-
-**Output language:** <answer>
-```
-
-After writing, confirm: "✓ Created `context/<path>`."
-
-## Step 4: Handle recommended category
-
-For the `target-audience` category, if missing:
-
-Ask:
-
-> "The **target-audience** category is missing. This helps skills tailor content to
-> the right reader. Would you like to:
-> (a) Create it through a short interview
-> (b) You have a file for this — tell me the path
-> (c) Skip — skills will generate without specific audience context"
-
-**Option (a) — Create via interview:**
-
-Ask: "Where should I save this file? (Suggested: `context/target-audience.md`)"
-
-Then ask:
-
-1. "How many distinct audience segments does this company target? (1–4 recommended.)"
-
-For each segment, ask:
-
-- "What is this persona's role or title?"
-- "What are their primary goals or motivations?"
-- "What are their biggest challenges or frustrations?"
-- "What objections do they typically raise?"
-- "What content formats or channels do they prefer?"
-
-Write the file:
-
-```markdown
-# Target Audience
-
-## Persona: <role/title>
-
-**Goals:** <answer>
-**Challenges:** <answer>
-**Objections:** <answer>
-**Preferred channels:** <answer>
-```
-
-After writing, confirm: "✓ Created `context/<path>`."
-
-Handle Options (b) and (c) the same as in Step 2.
-
-## Step 5: Handle optional categories
-
-Ask once, listing both at the same time to minimize questions:
-
-> "Would you like to add any of these optional context files?
->
-> - **storytelling-frameworks** — which frameworks to prioritize or avoid for this
->   project (the plugin already includes a full library; this captures client-specific
->   preferences, e.g. "always StoryBrand and PAS, never AIDA")
-> - **reference-materials** — books or research that inform your content approach
->
-> For each: (a) create via quick interview, (b) point to an existing file, or (c) skip.
-> Or say 'none' to skip all."
-
-**storytelling-frameworks (if creating):**
-
-Ask: "Where should I save this file? (Suggested: `context/storytelling-frameworks.md`)"
-
-Note to the owner:
-
-> "The plugin already includes a comprehensive framework library. This file records
-> client-specific preferences — which frameworks to lean on or avoid for this project."
-
-Then ask:
-
-1. "Which frameworks should be preferred for this project? (e.g. StoryBrand, PAS)"
-2. "Which frameworks should be avoided, and why? (e.g. 'AIDA — client finds it too salesy')"
-3. "Any other notes on narrative approach for this client?"
-
-Write the file:
-
-```markdown
-# Storytelling Framework Preferences
-
-The plugin's full framework library is available to all skills. This file
-records project-specific preferences that override or constrain that library.
-
-## Preferred frameworks
-
-<answer>
-
-## Frameworks to avoid
-
-<answer>
-
-## Notes
-
-<answer>
-```
-
-**reference-materials (if creating):**
-
-Ask: "Where should I save this file? (Suggested: `context/reference-materials.md`)"
-
-Then: "What books, research, or external sources inform your content approach? For
-each, give the title and a brief note on what it contributes."
-
-Write the file using the owner's descriptions.
-
-Note: `reference-samples` is managed by the `cc-content:cc-content-samples-curation` skill. Do not create
-it here.
-
-## Step 6: Register files in CLAUDE.md
-
-Collect all context files that were created or confirmed in Steps 2–5.
+If no rows were confirmed, skip to Step 6.
 
 Check the current CLAUDE.md state:
 
 ```bash
-ls CLAUDE.md 2>/dev/null && echo "exists" || echo "missing"
-grep -A 100 '## Context files' CLAUDE.md 2>/dev/null || echo "(no context table)"
+grep -c '## Context files' CLAUDE.md 2>/dev/null || echo "0"
 ```
 
-For each confirmed context file, generate a one-sentence summary (10–20 words) drawn
-from its content. Use this guidance per category:
+**If `## Context files` section exists:**
 
-| Category                | Summary guidance                                              |
-| ----------------------- | ------------------------------------------------------------- |
-| content-defaults        | State the output language and any other defaults              |
-| writing-style           | Tone adjectives + 1–2 key rules (e.g. "no exclamation marks") |
-| organization-identity   | Company name + one-sentence descriptor                        |
-| target-audience         | Role/title + key challenge in one phrase                      |
-| storytelling-frameworks | Which frameworks are preferred and which to avoid             |
-| reference-materials     | Theme or title(s) of the materials                            |
+Show only rows that are not already in the table:
 
-Build the table rows — skip categories for which no file was confirmed:
-
-```
-| organization-identity | context/company/acme.md | B2B SaaS platform for enterprise HR teams |
-| writing-style | context/brand-voice.md | Formal German, no exclamation marks, em-dash preferred |
-```
-
-**If CLAUDE.md is missing:**
-
-Create it with a header using the company name from `organization-identity` (or
-`[Company Name]` if that file is also absent), then propose the context table:
-
-> "I'll create CLAUDE.md with a context table for these files:
+> "I'll add these rows to your context table:
 >
-> | Category | File | Summary |
-> | -------- | ---- | ------- |
-> | <rows>   |
+> | Label      | File | Summary |
+> | ---------- | ---- | ------- |
+> | <new rows> |
 >
 > Shall I proceed? (yes / edit / skip)"
 
-- **Yes**: write CLAUDE.md with this structure and confirm: "✓ CLAUDE.md created."
-- **Edit**: let the owner adjust paths or summaries, then apply.
-- **Skip**: note "CLAUDE.md not created — register files manually when ready."
-
-The file to create:
-
-```markdown
-# [Company Name]
-
-## Context files
-
-Skills discover and load these files on demand — they are not pre-loaded.
-
-| Category | File | Summary |
-| -------- | ---- | ------- |
-| <rows>   |
-```
+- **Yes**: append the rows to the table. Confirm: "✓ CLAUDE.md updated."
+- **Edit**: ask what to change, update, show again.
+- **Skip**: note that the context table was not updated.
 
 **If CLAUDE.md exists but has no `## Context files` section:**
 
-Propose appending the section:
-
 > "I'll add a context table to your CLAUDE.md:
 >
-> | Category | File | Summary |
-> | -------- | ---- | ------- |
-> | <rows>   |
+> ## Context files
+>
+> Skills read all registered files and load what's relevant for each task.
+>
+> | Label                | File | Summary |
+> | -------------------- | ---- | ------- |
+> | <all confirmed rows> |
 >
 > Shall I proceed? (yes / edit / skip)"
 
-- **Yes**: append the section. Confirm: "✓ CLAUDE.md updated."
-- **Edit**: let the owner adjust, then apply.
-- **Skip**: note "CLAUDE.md not updated — add the context table manually when ready."
+**If CLAUDE.md does not exist:**
 
-**If CLAUDE.md exists and already has a `## Context files` section:**
+Ask: "There is no CLAUDE.md yet. What is the project or client name? (Used as the heading.)"
 
-Show only the rows that are missing from the existing table. Ask for confirmation
-before adding them.
+Create:
+
+```markdown
+# [Project Name]
+
+## Context files
+
+Skills read all registered files and load what's relevant for each task.
+
+| Label  | File | Summary |
+| ------ | ---- | ------- |
+| <rows> |
+```
+
+Confirm: "✓ CLAUDE.md created."
+
+## Step 6: Folder structure nudge
+
+After updating CLAUDE.md, add a practical tip:
+
+> "**Tip:** Content skills can also find unreferenced files on demand — for example,
+> 'check how we wrote the invitation for the XYZ event last year'. This works best with
+> meaningful file names (e.g. `xyz-event-invitation-2025.md`, not `draft-v3-final.md`)
+> and a folder structure you can describe in a sentence.
+>
+> Want to add a one-line note to your CLAUDE.md describing how this project's content
+> is organized? (yes / describe it / skip)"
+
+- **Yes or owner describes it**: add a `## Folder structure` note to CLAUDE.md.
+- **Skip**: continue.
 
 ## Step 7: Summary
 
-Print a final summary:
-
 ```
-Onboarding complete
+Context setup complete
 ──────────────────────────────────────────────────────
-content-defaults        ✓ context/<path>
-writing-style           ✓ context/<path>
-organization-identity   ✗ skipped intentionally
-target-audience         ✓ context/<path>
-storytelling-frameworks ✗ skipped
-reference-materials     ✗ skipped
-CLAUDE.md               ✓ updated (or: ✓ created / ✗ skipped)
+Registered:    <N> context file(s)
+CLAUDE.md:     ✓ updated (or: ✓ created / ✗ skipped)
 ──────────────────────────────────────────────────────
 ```
 
 Then say:
 
-> "Your marketing project context is ready. Skills like `cc-content:cc-content-linkedin-post`
-> will read context files on demand using the table in your CLAUDE.md."
+> "Your project context is ready. Content skills will read the registered files and
+> load what's relevant for each task — producing more on-brand, targeted output.
+> You can run this skill again any time to add more context, or use
+> `/cc-content:cc-content-promote` to quickly register a file mid-session."
 
 ## Step 8: Store learnings
 
-Before ending the session, review the interview for nuances that were discovered but
-not formalized into any context file created during Steps 2–5 of this run.
+Before ending, review the interview for nuances that were discovered but not formalized
+into any context file created during this run.
 
 For each qualifying observation, append one tagged line to `.claude/learnings.md`
 (create with standard header if missing):
@@ -442,8 +280,8 @@ in any existing `.claude/learnings.md` entry under any plugin tag.
 
 **Does not qualify:** information written into a context file just now; facts already
 in `CLAUDE.md`; standard onboarding behavior applied without deviation; facts
-semantically equivalent to any existing entry in `.claude/learnings.md` — when in
-doubt, skip; redundancy is worse than a missed entry.
+semantically equivalent to any existing entry — when in doubt, skip; redundancy is
+worse than a missed entry.
 
 Check for the file before appending:
 
